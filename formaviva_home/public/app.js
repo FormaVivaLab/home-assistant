@@ -1,11 +1,11 @@
 const sections = [
-  ['overview','Panoramica','⌂'],['all','Tutti','●'],['rooms','Stanze','▦'],['light','Luci','☼'],['climate','Clima','♨'],
+  ['home','HOME','⌂'],['overview','Panoramica','◫'],['all','Tutti','●'],['rooms','Stanze','▦'],['light','Luci','☼'],['climate','Clima','♨'],
   ['switch','Prese','⌁'],['cover','Tapparelle','▤'],['vacuum','Pulizia','◉'],['security','Sicurezza','◇'],['media','Media','▷'],['energy','Energia','ϟ'],['sensor','Sensori','◎']
 ];
 const domainMap = {overview:null,all:null,rooms:null,light:['light'],climate:['climate','fan'],switch:['switch','input_boolean'],cover:['cover'],vacuum:['vacuum'],security:['alarm_control_panel','binary_sensor','lock','camera'],media:['media_player','remote'],energy:['sensor'],sensor:['sensor','binary_sensor']};
 const icons = {light:'☼',climate:'♨',fan:'✣',switch:'⌁',input_boolean:'⌁',cover:'▤',vacuum:'◉',lock:'◇',binary_sensor:'◎',camera:'▣',alarm_control_panel:'◇',sensor:'◎',media_player:'▷',remote:'⌁',weather:'☁',device_tracker:'⌖',number:'#',select:'≡'};
 const stateLabels = {on:'Acceso',off:'Spento',unavailable:'Non disponibile',unknown:'Sconosciuto',cleaning:'In pulizia',docked:'In base',locked:'Bloccata',unlocked:'Sbloccata',home:'In casa',not_home:'Fuori casa'};
-let entities = [], active = 'overview', query = '';
+let entities = [], homeEntityIds = new Set(), active = 'home', query = '';
 
 const $ = id => document.getElementById(id);
 const domain = entity => entity.entity_id.split('.')[0];
@@ -30,7 +30,8 @@ function renderNav(){
 }
 function relevant(){
   let list = entities.filter(e=>!['automation','script','scene','update','zone','sun','event','button'].includes(domain(e)));
-  if(active==='rooms') list=list.filter(e=>e.attributes.area_id||e.attributes.device_class==='temperature'||e.attributes.device_class==='humidity');
+  if(active==='home') list=list.filter(e=>homeEntityIds.has(e.entity_id));
+  else if(active==='rooms') list=list.filter(e=>e.attributes.area_id||e.attributes.device_class==='temperature'||e.attributes.device_class==='humidity');
   else if(active==='energy') list=list.filter(e=>domain(e)==='sensor' && ['power','energy','battery'].includes(e.attributes.device_class));
   else if(active==='all') list=list;
   else if(active!=='overview') list=list.filter(e=>(domainMap[active]||[]).includes(domain(e)));
@@ -65,7 +66,7 @@ async function toggle(id){
   try{await api('service',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({domain:d,service,data:{entity_id:id}})});showToast(`Comando inviato a ${friendly(entity)}`);setTimeout(load,700)}catch(e){showToast(e.message)}
 }
 async function load(){
-  try{entities=await api('states');$('connection').textContent='Home Assistant connesso';$('connection').classList.add('online');$('updated').textContent=`Aggiornato ${new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}`;render()}
+  try{entities=await api('states');try{const imported=await api('lovelace?dashboard=dashboard-alessandro&view=home');homeEntityIds=new Set(imported.entity_ids||[])}catch(e){console.warn('Importazione HOME:',e.message)}$('connection').textContent=`Home Assistant connesso · ${homeEntityIds.size} da HOME`;$('connection').classList.add('online');$('updated').textContent=`Aggiornato ${new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}`;render()}
   catch(e){$('connection').textContent='Modalità anteprima';$('connection').classList.remove('online');if(!entities.length)entities=demo;render();}
 }
 const demo=[
