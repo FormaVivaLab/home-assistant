@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Corretta la compilazione Docker della funzione di importazione HOME.
+
 ## 0.1.2
 
 - Importazione della dashboard HOME da `dashboard-alessandro/home`.
