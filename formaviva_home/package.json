@@ -1,0 +1,8 @@
+{
+  "name": "formaviva-home-assistant",
+  "version": "0.1.2",
+  "private": true,
+  "dependencies": {
+    "ws": "8.18.3"
+  }
+}
