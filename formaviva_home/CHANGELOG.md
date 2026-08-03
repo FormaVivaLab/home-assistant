@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3
+
+- Corretto il processo Docker includendo `package-lock.json` prima di `npm ci`.
+- Evitato il riutilizzo della build non riuscita della versione 0.1.2.
+
 ## 0.1.2
 
 - Importazione automatica della dashboard `dashboard-alessandro`.
