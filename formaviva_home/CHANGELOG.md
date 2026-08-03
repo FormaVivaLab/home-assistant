@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+- Importazione automatica della dashboard `dashboard-alessandro`.
+- Lettura della vista `home` tramite WebSocket Home Assistant.
+- Nuova sezione HOME con le entità già presenti nella dashboard originale.
+- Indicazione del numero di entità importate nello stato di connessione.
+
 ## 0.1.1
 
 - Aggiunta la sezione Tutti senza limite di nove dispositivi.
