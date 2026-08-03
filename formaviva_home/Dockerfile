@@ -6,6 +6,7 @@ RUN apk add --no-cache nodejs npm
 WORKDIR /app
 COPY server.js /app/server.js
 COPY package.json /app/package.json
+COPY package-lock.json /app/package-lock.json
 COPY public /app/public
 
 RUN npm ci --omit=dev
