@@ -1,9 +1,9 @@
 const sections = [
-  ['overview','Panoramica','⌂'],['rooms','Stanze','▦'],['light','Luci','☼'],['climate','Clima','♨'],
-  ['switch','Prese','⌁'],['vacuum','Pulizia','◉'],['security','Sicurezza','◇'],['energy','Energia','ϟ']
+  ['overview','Panoramica','⌂'],['all','Tutti','●'],['rooms','Stanze','▦'],['light','Luci','☼'],['climate','Clima','♨'],
+  ['switch','Prese','⌁'],['cover','Tapparelle','▤'],['vacuum','Pulizia','◉'],['security','Sicurezza','◇'],['media','Media','▷'],['energy','Energia','ϟ'],['sensor','Sensori','◎']
 ];
-const domainMap = {overview:null,rooms:null,light:['light'],climate:['climate','fan'],switch:['switch'],vacuum:['vacuum'],security:['alarm_control_panel','binary_sensor','lock','camera'],energy:['sensor']};
-const icons = {light:'☼',climate:'♨',fan:'✣',switch:'⌁',vacuum:'◉',lock:'◇',binary_sensor:'◎',camera:'▣',alarm_control_panel:'◇',sensor:'ϟ'};
+const domainMap = {overview:null,all:null,rooms:null,light:['light'],climate:['climate','fan'],switch:['switch','input_boolean'],cover:['cover'],vacuum:['vacuum'],security:['alarm_control_panel','binary_sensor','lock','camera'],media:['media_player','remote'],energy:['sensor'],sensor:['sensor','binary_sensor']};
+const icons = {light:'☼',climate:'♨',fan:'✣',switch:'⌁',input_boolean:'⌁',cover:'▤',vacuum:'◉',lock:'◇',binary_sensor:'◎',camera:'▣',alarm_control_panel:'◇',sensor:'◎',media_player:'▷',remote:'⌁',weather:'☁',device_tracker:'⌖',number:'#',select:'≡'};
 const stateLabels = {on:'Acceso',off:'Spento',unavailable:'Non disponibile',unknown:'Sconosciuto',cleaning:'In pulizia',docked:'In base',locked:'Bloccata',unlocked:'Sbloccata',home:'In casa',not_home:'Fuori casa'};
 let entities = [], active = 'overview', query = '';
 
@@ -29,11 +29,12 @@ function renderNav(){
   document.querySelectorAll('.nav-button').forEach(b=>b.onclick=()=>{active=b.dataset.id;renderNav();render()});
 }
 function relevant(){
-  let list = entities.filter(e=>!['automation','script','scene','update','person','zone','sun','event'].includes(domain(e)));
+  let list = entities.filter(e=>!['automation','script','scene','update','zone','sun','event','button'].includes(domain(e)));
   if(active==='rooms') list=list.filter(e=>e.attributes.area_id||e.attributes.device_class==='temperature'||e.attributes.device_class==='humidity');
   else if(active==='energy') list=list.filter(e=>domain(e)==='sensor' && ['power','energy','battery'].includes(e.attributes.device_class));
+  else if(active==='all') list=list;
   else if(active!=='overview') list=list.filter(e=>(domainMap[active]||[]).includes(domain(e)));
-  else list=list.filter(e=>['light','climate','switch','vacuum','lock','alarm_control_panel'].includes(domain(e))).slice(0,9);
+  else list=list.filter(e=>['light','climate','fan','switch','input_boolean','cover','vacuum','lock','alarm_control_panel','media_player'].includes(domain(e)));
   if(query) list=list.filter(e=>(friendly(e)+' '+e.entity_id).toLowerCase().includes(query));
   return list;
 }
@@ -46,7 +47,7 @@ function renderSummary(){
   $('summary').innerHTML=items.map(([name,value,note],i)=>`<article class="summary-card"><div class="top"><span>${name}</span><span>${['☼','♨','◇','ϟ'][i]}</span></div><b>${value}</b><em>${note}</em></article>`).join('');
 }
 function card(entity){
-  const d=domain(entity), controllable=['light','switch','vacuum','lock'].includes(d), on=isOn(entity);
+  const d=domain(entity), controllable=['light','switch','input_boolean','vacuum','lock','cover','media_player','fan'].includes(d), on=isOn(entity);
   const unit=entity.attributes.unit_of_measurement||'';
   return `<article class="device-card ${on?'on':''}" data-entity="${entity.entity_id}"><div class="device-top"><div class="device-icon">${icons[d]||'·'}</div>${controllable?'<button class="toggle" aria-label="Cambia stato"></button>':''}</div><div class="device-name">${friendly(entity)}</div><div class="device-state">${stateLabels[entity.state]||entity.state} ${unit}</div></article>`;
 }
@@ -59,6 +60,8 @@ async function toggle(id){
   const entity=entities.find(e=>e.entity_id===id), d=domain(entity); let service=isOn(entity)?'turn_off':'turn_on';
   if(d==='vacuum') service=isOn(entity)?'return_to_base':'start';
   if(d==='lock') service=entity.state==='locked'?'unlock':'lock';
+  if(d==='cover') service=entity.state==='open'?'close_cover':'open_cover';
+  if(d==='media_player') service=isOn(entity)?'turn_off':'turn_on';
   try{await api('service',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({domain:d,service,data:{entity_id:id}})});showToast(`Comando inviato a ${friendly(entity)}`);setTimeout(load,700)}catch(e){showToast(e.message)}
 }
 async function load(){
@@ -74,4 +77,3 @@ const demo=[
 $('search').oninput=e=>{query=e.target.value.toLowerCase();render()}; $('refresh').onclick=load;
 $('themeButton').onclick=()=>{const dark=document.documentElement.dataset.theme==='dark';document.documentElement.dataset.theme=dark?'light':'dark';localStorage.setItem('fvh-theme',dark?'light':'dark')};
 document.documentElement.dataset.theme=localStorage.getItem('fvh-theme')||'light';renderNav();load();setInterval(load,15000);
-
