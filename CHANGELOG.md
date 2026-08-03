@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Importazione della dashboard HOME da `dashboard-alessandro/home`.
+- Nuova sezione HOME popolata dalle entità già usate in Lovelace.
+
 ## 0.1.1
 
 - Aggiunta la sezione Tutti senza limite di nove dispositivi.
